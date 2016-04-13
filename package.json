@@ -1,7 +1,7 @@
 {
   "name": "@susisu/whitespace-js",
-  "version": "0.0.0",
-  "description": "",
+  "version": "0.0.1",
+  "description": "Whitespace interpreter",
   "main": "index.js",
   "directories": {
     "bin": "bin"
