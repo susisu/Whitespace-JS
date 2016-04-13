@@ -1,0 +1,101 @@
+#!/usr/bin/env node
+
+/*
+ * Whitespace-JS / wspace
+ * copyright (c) 2016 Susisu
+ */
+
+"use strict";
+
+const fs = require("fs");
+
+const co = require("co");
+
+let program = require("commander");
+
+let ws = require("../lib/ws.js");
+let packageInfo = require("../package.json");
+
+process.title = "wspace";
+process.stdin.setEncoding("utf8");
+
+program.version(packageInfo.version + " (language version " + ws.LANGUAGE_VERSION + ")", "-v, --version");
+program.option("-u, --unwspace", "parse program as UnWhitespace");
+program.arguments("<progfile>")
+    .action(progfile => {
+        co(function * () {
+            let src = yield readFile(progfile, { encoding: "utf8" });
+            // parse
+            let prog = program["unwspace"]
+                ? ws.parser.unws(progfile, src)
+                : ws.parser.ws(progfile, src);
+            // optimise
+            prog = ws.inst.compile(prog);
+            // run
+            ws.vm.run(
+                prog,
+                stdinStream(),
+                x => process.stdout.write(x),
+                c => process.exit(c)
+            ).catch(error => {
+                process.stderr.write(String(error) + "\n");
+                process.exit(1);
+            });
+        });
+    });
+program.parse(process.argv);
+
+function readFile(filename, options) {
+    return new Promise((resolve, reject) => {
+        fs.readFile(filename, options, (error, data) => {
+            if (error) {
+                reject(error);
+            }
+            else {
+                resolve(data);
+            }
+        })
+    });
+}
+
+function stdinStream() {
+    let buffer = "";
+    let end = false;
+    let pending = null;
+
+    process.stdin.on("readable", () => {
+        let chunk = process.stdin.read();
+        if (chunk !== null) {
+            buffer += chunk;
+            if (pending) {
+                let c = buffer[0];
+                buffer = buffer.substr(1);
+                pending.resolve(c);
+                pending = null;
+            }
+        }
+    });
+
+    process.stdin.on("end", () => {
+        end = true;
+        if (pending) {
+            pending.reject(new Error("end of input"));
+            pending = null;
+        }
+    });
+
+    function input() {
+        if (buffer.length > 0) {
+            let c = buffer[0];
+            buffer = buffer.substr(1);
+            return Promise.resolve(c);
+        }
+        else {
+            return new Promise((resolve, reject) => {
+                pending = { resolve, reject };
+            });
+        }
+    }
+
+    return input;
+}
