@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/susisu/Whitespace-JS/issues"
   },
-  "homepage": "https://github.com/susisu/Whitespace-JS#readme"
+  "homepage": "https://github.com/susisu/Whitespace-JS#readme",
+  "dependencies": {
+    "loquat": "^1.3.2"
+  }
 }
