@@ -1,0 +1,44 @@
+#!/usr/bin/env node
+
+/*
+ * Whitespace-JS / unws2ws
+ * copyright (c) 2016 Susisu
+ */
+
+"use strict";
+
+const fs = require("fs");
+
+const co = require("co");
+
+let program = require("commander");
+
+let ws = require("../lib/ws.js");
+let packageInfo = require("../package.json");
+
+process.title = "unws2ws";
+process.stdin.setEncoding("utf8");
+
+program.version(packageInfo.version + " (language version " + ws.LANGUAGE_VERSION + ")", "-v, --version");
+program.arguments("<progfile>")
+    .action(progfile => {
+        co(function * () {
+            let src = yield readFile(progfile, { encoding: "utf8" });
+            let prog = ws.parser.unws(progfile, src);
+            process.stdout.write(prog.map(inst => inst.toWhitespace()).join(""));
+        });
+    });
+program.parse(process.argv);
+
+function readFile(filename, options) {
+    return new Promise((resolve, reject) => {
+        fs.readFile(filename, options, (error, data) => {
+            if (error) {
+                reject(error);
+            }
+            else {
+                resolve(data);
+            }
+        })
+    });
+}
