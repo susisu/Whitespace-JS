@@ -26,6 +26,9 @@ program.arguments("<progfile>")
             let src = yield readFile(progfile, { encoding: "utf8" });
             let prog = ws.parser.ws(progfile, src);
             process.stdout.write(prog.map(inst => inst.toUnWhitespace()).join("\n") + "\n");
+        }).catch(error => {
+            process.stderr.write(String(error) + "\n");
+            process.exit(1);
         });
     });
 program.parse(process.argv);

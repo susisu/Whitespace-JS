@@ -32,15 +32,15 @@ program.arguments("<progfile>")
             // optimise
             prog = ws.inst.compile(prog);
             // run
-            ws.vm.run(
+            yield ws.vm.run(
                 prog,
                 stdinStream(),
                 x => process.stdout.write(x),
                 c => process.exit(c)
-            ).catch(error => {
-                process.stderr.write(String(error) + "\n");
-                process.exit(1);
-            });
+            );
+        }).catch(error => {
+            process.stderr.write(String(error) + "\n");
+            process.exit(1);
         });
     });
 program.parse(process.argv);
