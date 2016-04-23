@@ -24,12 +24,14 @@ program.version(packageInfo.version + " (language version " + ws.LANGUAGE_VERSIO
 program.option("-d, --debug", "dump instruction, stack and heap after each instruction");
 program.option("-e, --eval <program>", "evaluate program");
 program.option("-u, --unwspace", "parse program as UnWhitespace");
+program.option("-w, --no-warnings", "suppress warnings");
 program.parse(process.argv);
 
 let main = co(function * () {
     const DEBUG    = program["debug"];
     const EVAL     = program["eval"];
     const UNWSPACE = program["unwspace"];
+    const WARNINGS = program["warnings"];
     if (EVAL === undefined && program.args.length === 0) {
         program.help();
     }
@@ -50,8 +52,10 @@ let main = co(function * () {
         prog,
         stdinStream(),
         x => process.stdout.write(x),
+        x => process.stderr.write(x),
         c => process.exit(c),
-        DEBUG
+        DEBUG,
+        WARNINGS
     );
 }).catch(error => {
     process.stderr.write(String(error) + "\n");
