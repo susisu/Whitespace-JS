@@ -19,33 +19,44 @@ let packageInfo = require("../package.json");
 process.title = "wspace";
 process.stdin.setEncoding("utf8");
 
+program.usage("[options] <progfile>");
 program.version(packageInfo.version + " (language version " + ws.LANGUAGE_VERSION + ")", "-v, --version");
-program.option("-u, --unwspace", "parse program as UnWhitespace");
 program.option("-d, --debug", "dump instruction, stack and heap after each instruction");
-program.arguments("<progfile>")
-    .action(progfile => {
-        co(function * () {
-            let src = yield readFile(progfile, { encoding: "utf8" });
-            // parse
-            let prog = program["unwspace"]
-                ? ws.parser.unws(progfile, src)
-                : ws.parser.ws(progfile, src);
-            // optimise
-            prog = ws.inst.compile(prog);
-            // run
-            yield ws.vm.run(
-                prog,
-                stdinStream(),
-                x => process.stdout.write(x),
-                c => process.exit(c),
-                program["debug"]
-            );
-        }).catch(error => {
-            process.stderr.write(String(error) + "\n");
-            process.exit(1);
-        });
-    });
+program.option("-e, --eval <program>", "evaluate program");
+program.option("-u, --unwspace", "parse program as UnWhitespace");
 program.parse(process.argv);
+
+let main = co(function * () {
+    const DEBUG    = program["debug"];
+    const EVAL     = program["eval"];
+    const UNWSPACE = program["unwspace"];
+    if (EVAL === undefined && program.args.length === 0) {
+        program.help();
+    }
+    const PROGFILE = EVAL === undefined && program.args.length > 0
+        ? program.args[0]
+        : "";
+    let src = EVAL !== undefined
+        ? EVAL
+        : yield readFile(PROGFILE, { encoding: "utf8" });
+    // parse
+    let prog = UNWSPACE
+        ? ws.parser.unws(PROGFILE, src)
+        : ws.parser.ws(PROGFILE, src);
+    // optimise
+    prog = ws.inst.compile(prog);
+    // run
+    yield ws.vm.run(
+        prog,
+        stdinStream(),
+        x => process.stdout.write(x),
+        c => process.exit(c),
+        DEBUG
+    );
+}).catch(error => {
+    process.stderr.write(String(error) + "\n");
+    process.exit(1);
+});
 
 function readFile(filename, options) {
     return new Promise((resolve, reject) => {
