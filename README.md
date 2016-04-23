@@ -8,9 +8,11 @@ wspace <progfile>
 ```
 It also contains `ws2unws` and `unws2ws` which convert a Whitespace program into a human readable format (named *UnWhitespace*) and vice versa.
 
+For more information, see `wspace -h`.
+
 ## Notes
 * Numbers and arithmetic have only 32bit precision (not arbitrary precision as the original implementation).
-* Programs not terminated by `[LF][LF][LF]` are allowed.
+* Programs not terminated by `[LF][LF][LF]` will produce warnings (use `-w, --no-warnings` to suppress them).
 
 ## License
 [MIT License](http://opensource.org/licenses/mit-license.php)
