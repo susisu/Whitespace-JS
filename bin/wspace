@@ -23,6 +23,7 @@ program.usage("[options] <progfile>");
 program.version(packageInfo.version + " (language version " + ws.LANGUAGE_VERSION + ")", "-v, --version");
 program.option("-d, --debug", "dump instruction, stack and heap after each instruction");
 program.option("-e, --eval <program>", "evaluate program");
+program.option("-n, --nullterm", "terminate input with a NULL character");
 program.option("-u, --unwspace", "parse program as UnWhitespace");
 program.option("-w, --no-warnings", "suppress warnings");
 program.parse(process.argv);
@@ -30,6 +31,7 @@ program.parse(process.argv);
 let main = co(function * () {
     const DEBUG    = program["debug"];
     const EVAL     = program["eval"];
+    const NULLTERM = program["nullterm"];
     const UNWSPACE = program["unwspace"];
     const WARNINGS = program["warnings"];
     if (EVAL === undefined && program.args.length === 0) {
@@ -50,7 +52,7 @@ let main = co(function * () {
     // run
     yield ws.vm.run(
         prog,
-        stdinStream(),
+        stdinStream(NULLTERM),
         x => process.stdout.write(x),
         x => process.stderr.write(x),
         c => process.exit(c),
@@ -75,7 +77,7 @@ function readFile(filename, options) {
     });
 }
 
-function stdinStream() {
+function stdinStream(nullTermination) {
     let buffer = "";
     let end = false;
     let pending = null;
@@ -96,8 +98,16 @@ function stdinStream() {
     process.stdin.on("end", () => {
         end = true;
         if (pending) {
-            pending.reject(new Error("end of input"));
+            if (nullTermination) {
+                pending.resolve("\0");
+            }
+            else {
+                pending.reject(new Error("end of input"));
+            }
             pending = null;
+        }
+        else {
+            buffer += "\0";
         }
     });
 
@@ -106,6 +116,9 @@ function stdinStream() {
             let c = buffer[0];
             buffer = buffer.substr(1);
             return Promise.resolve(c);
+        }
+        else if (end) {
+            return Promise.reject(new Error("end of input"));
         }
         else {
             return new Promise((resolve, reject) => {
