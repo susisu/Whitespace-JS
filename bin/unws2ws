@@ -11,10 +11,10 @@ const fs = require("fs");
 
 const co = require("co");
 
-let program = require("commander");
+const program = require("commander");
 
-let ws = require("../lib/ws.js");
-let packageInfo = require("../package.json");
+const ws = require("../lib/ws.js");
+const packageInfo = require("../package.json");
 
 process.title = "unws2ws";
 process.stdin.setEncoding("utf8");
@@ -22,9 +22,9 @@ process.stdin.setEncoding("utf8");
 program.version(packageInfo.version + " (language version " + ws.LANGUAGE_VERSION + ")", "-v, --version");
 program.arguments("<progfile>")
     .action(progfile => {
-        co(function * () {
-            let src = yield readFile(progfile, { encoding: "utf8" });
-            let prog = ws.parser.unws(progfile, src);
+        co(function* () {
+            const src = yield readFile(progfile, { encoding: "utf8" });
+            const prog = ws.parser.unws(progfile, src);
             process.stdout.write(prog.map(inst => inst.toWhitespace()).join(""));
         }).catch(error => {
             process.stderr.write(String(error) + "\n");
@@ -42,6 +42,6 @@ function readFile(filename, options) {
             else {
                 resolve(data);
             }
-        })
+        });
     });
 }

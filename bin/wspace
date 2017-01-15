@@ -11,10 +11,10 @@ const fs = require("fs");
 
 const co = require("co");
 
-let program = require("commander");
+const program = require("commander");
 
-let ws = require("../lib/ws.js");
-let packageInfo = require("../package.json");
+const ws = require("../lib/ws.js");
+const packageInfo = require("../package.json");
 
 process.title = "wspace";
 process.stdin.setEncoding("utf8");
@@ -28,7 +28,7 @@ program.option("-u, --unwspace", "parse program as UnWhitespace");
 program.option("-w, --no-warnings", "suppress warnings");
 program.parse(process.argv);
 
-let main = co(function * () {
+co(function* () {
     const DEBUG    = program["debug"];
     const EVAL     = program["eval"];
     const NULLTERM = program["nullterm"];
@@ -40,7 +40,7 @@ let main = co(function * () {
     const PROGFILE = EVAL === undefined && program.args.length > 0
         ? program.args[0]
         : "";
-    let src = EVAL !== undefined
+    const src = EVAL !== undefined
         ? EVAL
         : yield readFile(PROGFILE, { encoding: "utf8" });
     // parse
@@ -73,7 +73,7 @@ function readFile(filename, options) {
             else {
                 resolve(data);
             }
-        })
+        });
     });
 }
 
@@ -83,11 +83,11 @@ function stdinStream(nullTermination) {
     let pending = null;
 
     process.stdin.on("readable", () => {
-        let chunk = process.stdin.read();
+        const chunk = process.stdin.read();
         if (chunk !== null) {
             buffer += chunk;
             if (pending) {
-                let c = buffer[0];
+                const c = buffer[0];
                 buffer = buffer.substr(1);
                 pending.resolve(c);
                 pending = null;
@@ -113,7 +113,7 @@ function stdinStream(nullTermination) {
 
     function input() {
         if (buffer.length > 0) {
-            let c = buffer[0];
+            const c = buffer[0];
             buffer = buffer.substr(1);
             return Promise.resolve(c);
         }
